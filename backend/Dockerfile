@@ -12,7 +12,6 @@ RUN pip install --no-cache-dir -r requirements.txt
 # 应用代码
 COPY sudoku.py .
 COPY app.py .
-COPY static/ static/
 
 # 对外端口
 ENV PORT=8081

@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>数独游戏</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <h1>数独游戏</h1>
+  <div class="toolbar">
+    <label>难度：</label>
+    <select id="difficulty">
+      <option value="easy">简单</option>
+      <option value="medium" selected>中等</option>
+      <option value="hard">困难</option>
+    </select>
+    <button id="btnNew">新游戏</button>
+    <button id="btnCheck" class="secondary">检查答案</button>
+    <button id="btnHint" class="secondary">获取提示</button>
+  </div>
+  <div id="board-container">
+    <div id="board"></div>
+  </div>
+  <div id="msg"></div>
+
+  <script src="script.js"></script>
+</body>
+</html>

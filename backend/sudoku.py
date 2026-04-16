@@ -124,3 +124,16 @@ def is_solution(puzzle: List[List[int]], solution: List[List[int]]) -> bool:
             if solution[r][c] == 0:
                 return False
     return True
+
+
+def get_hint(puzzle: List[List[int]], solution: List[List[int]]) -> Optional[Tuple[int, int, int]]:
+    """获取一个提示：返回 (row, col, value)，选择一个空白格子并给出正确答案"""
+    empty_cells = []
+    for r in range(9):
+        for c in range(9):
+            if puzzle[r][c] == 0:
+                empty_cells.append((r, c))
+    if not empty_cells:
+        return None
+    r, c = random.choice(empty_cells)
+    return (r, c, solution[r][c])
