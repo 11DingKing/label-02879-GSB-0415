@@ -20,6 +20,7 @@
     #board tr:nth-child(3n) td { border-bottom: 2px solid #0f3460; }
     #board input { width: 100%; height: 100%; border: none; background: #16213e; color: #eaeaea; text-align: center; font-size: 18px; font-weight: bold; }
     #board input.fixed { background: #0f3460; color: #aaa; }
+    #board input.hint { background: #4ade80; color: #1a1a2e; }
     #board input:focus { outline: 2px solid #e94560; outline-offset: -2px; }
     #msg { text-align: center; margin-top: 12px; min-height: 24px; color: #e94560; }
   </style>
@@ -35,7 +36,7 @@
     </select>
     <button id="btnNew">新游戏</button>
     <button id="btnCheck" class="secondary">检查答案</button>
-    <button id="btnSolution" class="secondary">显示答案</button>
+    <button id="btnHint" class="secondary">获取提示</button>
   </div>
   <table id="board"></table>
   <div id="msg"></div>
@@ -62,6 +63,7 @@
           inp.dataset.col = c;
           inp.addEventListener("input", function() {
             this.value = this.value.replace(/[^1-9]/g, "");
+            this.classList.remove("hint");
             if (this.value.length === 1 && c < 8) document.getElementById(cellId(r, c + 1)).focus();
             else if (this.value.length === 1 && r < 8 && c === 8) document.getElementById(cellId(r + 1, 0)).focus();
           });
@@ -81,6 +83,7 @@
           const isFixedCell = fixed.has(r + "," + c);
           inp.disabled = isFixedCell;
           inp.classList.toggle("fixed", isFixedCell);
+          inp.classList.remove("hint");
         }
       }
     }
@@ -144,15 +147,32 @@
       }
     }
 
-    function showSolution() {
-      fillBoard(solution, true);
-      setMsg("已显示答案（只读）", false);
+    async function getHint() {
+      const grid = getGrid();
+      try {
+        const res = await fetch(API + "/api/hint", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ grid, solution })
+        });
+        const data = await res.json();
+        if (data.valid) {
+          const inp = document.getElementById(cellId(data.row, data.col));
+          inp.value = String(data.value);
+          inp.classList.add("hint");
+          setMsg(`提示：位置 (${data.row + 1}, ${data.col + 1}) 应填 ${data.value}`, false);
+        } else {
+          setMsg(data.message || "获取提示失败", true);
+        }
+      } catch (e) {
+        setMsg("获取提示失败: " + e.message, true);
+      }
     }
 
     render();
     document.getElementById("btnNew").addEventListener("click", newGame);
     document.getElementById("btnCheck").addEventListener("click", check);
-    document.getElementById("btnSolution").addEventListener("click", showSolution);
+    document.getElementById("btnHint").addEventListener("click", getHint);
     newGame();
   </script>
 </body>
