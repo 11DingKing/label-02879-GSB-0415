@@ -1,159 +1,269 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="zh-CN">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>数独</title>
-  <style>
-    * { box-sizing: border-box; }
-    body { font-family: "Segoe UI", sans-serif; background: #1a1a2e; color: #eaeaea; margin: 0; padding: 16px; min-height: 100vh; }
-    h1 { text-align: center; margin-bottom: 16px; }
-    .toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin-bottom: 16px; justify-content: center; }
-    .toolbar label { margin-right: 4px; }
-    .toolbar select { padding: 6px 10px; border-radius: 6px; background: #16213e; color: #eaeaea; border: 1px solid #2a2a4a; }
-    .toolbar button { padding: 8px 16px; border-radius: 6px; background: #e94560; color: #fff; border: none; cursor: pointer; font-weight: bold; }
-    .toolbar button:hover { opacity: 0.9; }
-    .toolbar button.secondary { background: #0f3460; }
-    #board { margin: 0 auto; border-collapse: collapse; background: #2a2a4a; border: 2px solid #2a2a4a; }
-    #board td { width: 40px; height: 40px; padding: 0; border: 1px solid #3a3a5a; }
-    #board td:nth-child(3n) { border-right: 2px solid #0f3460; }
-    #board tr:nth-child(3n) td { border-bottom: 2px solid #0f3460; }
-    #board input { width: 100%; height: 100%; border: none; background: #16213e; color: #eaeaea; text-align: center; font-size: 18px; font-weight: bold; }
-    #board input.fixed { background: #0f3460; color: #aaa; }
-    #board input:focus { outline: 2px solid #e94560; outline-offset: -2px; }
-    #msg { text-align: center; margin-top: 12px; min-height: 24px; color: #e94560; }
-  </style>
-</head>
-<body>
-  <h1>数独</h1>
-  <div class="toolbar">
-    <label>难度：</label>
-    <select id="difficulty">
-      <option value="easy">简单</option>
-      <option value="medium" selected>中等</option>
-      <option value="hard">困难</option>
-    </select>
-    <button id="btnNew">新游戏</button>
-    <button id="btnCheck" class="secondary">检查答案</button>
-    <button id="btnSolution" class="secondary">显示答案</button>
-  </div>
-  <table id="board"></table>
-  <div id="msg"></div>
-
-  <script>
-    const API = "";
-    let puzzle = [], solution = [], fixed = new Set();
-
-    function cellId(r, c) { return "c-" + r + "-" + c; }
-
-    function render() {
-      const t = document.getElementById("board");
-      t.innerHTML = "";
-      for (let r = 0; r < 9; r++) {
-        const tr = document.createElement("tr");
-        for (let c = 0; c < 9; c++) {
-          const td = document.createElement("td");
-          const inp = document.createElement("input");
-          inp.type = "text";
-          inp.maxLength = 1;
-          inp.autocomplete = "off";
-          inp.id = cellId(r, c);
-          inp.dataset.row = r;
-          inp.dataset.col = c;
-          inp.addEventListener("input", function() {
-            this.value = this.value.replace(/[^1-9]/g, "");
-            if (this.value.length === 1 && c < 8) document.getElementById(cellId(r, c + 1)).focus();
-            else if (this.value.length === 1 && r < 8 && c === 8) document.getElementById(cellId(r + 1, 0)).focus();
-          });
-          tr.appendChild(td);
-          td.appendChild(inp);
-        }
-        t.appendChild(tr);
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>数独</title>
+    <style>
+      * {
+        box-sizing: border-box;
       }
-    }
-
-    function fillBoard(grid, isFixed) {
-      for (let r = 0; r < 9; r++) {
-        for (let c = 0; c < 9; c++) {
-          const inp = document.getElementById(cellId(r, c));
-          const v = grid[r][c];
-          inp.value = v ? String(v) : "";
-          const isFixedCell = fixed.has(r + "," + c);
-          inp.disabled = isFixedCell;
-          inp.classList.toggle("fixed", isFixedCell);
-        }
+      body {
+        font-family: "Segoe UI", sans-serif;
+        background: #1a1a2e;
+        color: #eaeaea;
+        margin: 0;
+        padding: 16px;
+        min-height: 100vh;
       }
-    }
-
-    function getGrid() {
-      const grid = [];
-      for (let r = 0; r < 9; r++) {
-        const row = [];
-        for (let c = 0; c < 9; c++) {
-          const v = document.getElementById(cellId(r, c)).value.trim();
-          row.push(v ? parseInt(v, 10) : 0);
-        }
-        grid.push(row);
+      h1 {
+        text-align: center;
+        margin-bottom: 16px;
       }
-      return grid;
-    }
+      .toolbar {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 16px;
+        justify-content: center;
+      }
+      .toolbar label {
+        margin-right: 4px;
+      }
+      .toolbar select {
+        padding: 6px 10px;
+        border-radius: 6px;
+        background: #16213e;
+        color: #eaeaea;
+        border: 1px solid #2a2a4a;
+      }
+      .toolbar button {
+        padding: 8px 16px;
+        border-radius: 6px;
+        background: #e94560;
+        color: #fff;
+        border: none;
+        cursor: pointer;
+        font-weight: bold;
+      }
+      .toolbar button:hover {
+        opacity: 0.9;
+      }
+      .toolbar button.secondary {
+        background: #0f3460;
+      }
+      #board {
+        margin: 0 auto;
+        border-collapse: collapse;
+        background: #2a2a4a;
+        border: 2px solid #2a2a4a;
+      }
+      #board td {
+        width: 40px;
+        height: 40px;
+        padding: 0;
+        border: 1px solid #3a3a5a;
+      }
+      #board td:nth-child(3n) {
+        border-right: 2px solid #0f3460;
+      }
+      #board tr:nth-child(3n) td {
+        border-bottom: 2px solid #0f3460;
+      }
+      #board input {
+        width: 100%;
+        height: 100%;
+        border: none;
+        background: #16213e;
+        color: #eaeaea;
+        text-align: center;
+        font-size: 18px;
+        font-weight: bold;
+      }
+      #board input.fixed {
+        background: #0f3460;
+        color: #aaa;
+      }
+      #board input:focus {
+        outline: 2px solid #e94560;
+        outline-offset: -2px;
+      }
+      #msg {
+        text-align: center;
+        margin-top: 12px;
+        min-height: 24px;
+        color: #e94560;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>数独</h1>
+    <div class="toolbar">
+      <label>难度：</label>
+      <select id="difficulty">
+        <option value="easy">简单</option>
+        <option value="medium" selected>中等</option>
+        <option value="hard">困难</option>
+      </select>
+      <button id="btnNew">新游戏</button>
+      <button id="btnCheck" class="secondary">检查答案</button>
+      <button id="btnHint" class="secondary">获取提示</button>
+      <button id="btnSolution" class="secondary">显示答案</button>
+    </div>
+    <table id="board"></table>
+    <div id="msg"></div>
 
-    function setMsg(text, isErr) {
-      const el = document.getElementById("msg");
-      el.textContent = text;
-      el.style.color = isErr ? "#e94560" : "#4ade80";
-    }
-
-    async function newGame() {
-      const diff = document.getElementById("difficulty").value;
-      try {
-        const res = await fetch(API + "/api/generate", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ difficulty: diff })
-        });
-        const data = await res.json();
-        puzzle = data.puzzle;
-        solution = data.solution;
+    <script>
+      const API = "";
+      let puzzle = [],
+        solution = [],
         fixed = new Set();
-        for (let r = 0; r < 9; r++) for (let c = 0; c < 9; c++) if (puzzle[r][c]) fixed.add(r + "," + c);
-        fillBoard(puzzle, true);
-        setMsg("");
-      } catch (e) {
-        setMsg("加载失败: " + e.message, true);
-      }
-    }
 
-    async function check() {
-      const grid = getGrid();
-      if (grid.some(row => row.some(v => v === 0))) {
-        setMsg("请先填满所有空格再检查。", true);
-        return;
+      function cellId(r, c) {
+        return "c-" + r + "-" + c;
       }
-      try {
-        const res = await fetch(API + "/api/validate", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ grid })
-        });
-        const data = await res.json();
-        if (data.valid) setMsg("恭喜，答案正确！", false);
-        else setMsg(data.message || "存在错误，请修改。", true);
-      } catch (e) {
-        setMsg("检查失败: " + e.message, true);
+
+      function render() {
+        const t = document.getElementById("board");
+        t.innerHTML = "";
+        for (let r = 0; r < 9; r++) {
+          const tr = document.createElement("tr");
+          for (let c = 0; c < 9; c++) {
+            const td = document.createElement("td");
+            const inp = document.createElement("input");
+            inp.type = "text";
+            inp.maxLength = 1;
+            inp.autocomplete = "off";
+            inp.id = cellId(r, c);
+            inp.dataset.row = r;
+            inp.dataset.col = c;
+            inp.addEventListener("input", function () {
+              this.value = this.value.replace(/[^1-9]/g, "");
+              if (this.value.length === 1 && c < 8)
+                document.getElementById(cellId(r, c + 1)).focus();
+              else if (this.value.length === 1 && r < 8 && c === 8)
+                document.getElementById(cellId(r + 1, 0)).focus();
+            });
+            tr.appendChild(td);
+            td.appendChild(inp);
+          }
+          t.appendChild(tr);
+        }
       }
-    }
 
-    function showSolution() {
-      fillBoard(solution, true);
-      setMsg("已显示答案（只读）", false);
-    }
+      function fillBoard(grid, isFixed) {
+        for (let r = 0; r < 9; r++) {
+          for (let c = 0; c < 9; c++) {
+            const inp = document.getElementById(cellId(r, c));
+            const v = grid[r][c];
+            inp.value = v ? String(v) : "";
+            const isFixedCell = fixed.has(r + "," + c);
+            inp.disabled = isFixedCell;
+            inp.classList.toggle("fixed", isFixedCell);
+          }
+        }
+      }
 
-    render();
-    document.getElementById("btnNew").addEventListener("click", newGame);
-    document.getElementById("btnCheck").addEventListener("click", check);
-    document.getElementById("btnSolution").addEventListener("click", showSolution);
-    newGame();
-  </script>
-</body>
+      function getGrid() {
+        const grid = [];
+        for (let r = 0; r < 9; r++) {
+          const row = [];
+          for (let c = 0; c < 9; c++) {
+            const v = document.getElementById(cellId(r, c)).value.trim();
+            row.push(v ? parseInt(v, 10) : 0);
+          }
+          grid.push(row);
+        }
+        return grid;
+      }
+
+      function setMsg(text, isErr) {
+        const el = document.getElementById("msg");
+        el.textContent = text;
+        el.style.color = isErr ? "#e94560" : "#4ade80";
+      }
+
+      async function newGame() {
+        const diff = document.getElementById("difficulty").value;
+        try {
+          const res = await fetch(API + "/api/generate", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ difficulty: diff }),
+          });
+          const data = await res.json();
+          puzzle = data.puzzle;
+          solution = data.solution;
+          fixed = new Set();
+          for (let r = 0; r < 9; r++)
+            for (let c = 0; c < 9; c++)
+              if (puzzle[r][c]) fixed.add(r + "," + c);
+          fillBoard(puzzle, true);
+          setMsg("");
+        } catch (e) {
+          setMsg("加载失败: " + e.message, true);
+        }
+      }
+
+      async function check() {
+        const grid = getGrid();
+        if (grid.some((row) => row.some((v) => v === 0))) {
+          setMsg("请先填满所有空格再检查。", true);
+          return;
+        }
+        try {
+          const res = await fetch(API + "/api/validate", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ grid }),
+          });
+          const data = await res.json();
+          if (data.valid) setMsg("恭喜，答案正确！", false);
+          else setMsg(data.message || "存在错误，请修改。", true);
+        } catch (e) {
+          setMsg("检查失败: " + e.message, true);
+        }
+      }
+
+      function showSolution() {
+        fillBoard(solution, true);
+        setMsg("已显示答案（只读）", false);
+      }
+
+      async function getHint() {
+        const grid = getGrid();
+        try {
+          const res = await fetch(API + "/api/hint", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ grid, solution }),
+          });
+          const data = await res.json();
+          if (data.success) {
+            const inp = document.getElementById(cellId(data.row, data.col));
+            inp.value = String(data.value);
+            inp.focus();
+            setMsg(
+              `已在位置 (${data.row + 1}, ${data.col + 1}) 填入提示数字`,
+              false,
+            );
+          } else {
+            setMsg(data.message || "无法获取提示", true);
+          }
+        } catch (e) {
+          setMsg("获取提示失败: " + e.message, true);
+        }
+      }
+
+      render();
+      document.getElementById("btnNew").addEventListener("click", newGame);
+      document.getElementById("btnCheck").addEventListener("click", check);
+      document.getElementById("btnHint").addEventListener("click", getHint);
+      document
+        .getElementById("btnSolution")
+        .addEventListener("click", showSolution);
+      newGame();
+    </script>
+  </body>
 </html>

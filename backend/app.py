@@ -37,6 +37,30 @@ def api_validate():
     return jsonify({"valid": valid, "message": message or ""})
 
 
+@app.route("/api/hint", methods=["POST"])
+def api_hint():
+    data = request.get_json() or {}
+    grid = data.get("grid")
+    solution = data.get("solution")
+    if not grid or len(grid) != 9 or any(len(row) != 9 for row in grid):
+        return jsonify({"success": False, "message": "无效的盘面"}), 400
+    if not solution or len(solution) != 9 or any(len(row) != 9 for row in solution):
+        return jsonify({"success": False, "message": "缺少答案信息"}), 400
+    
+    # 找到第一个空白格子
+    for r in range(9):
+        for c in range(9):
+            if grid[r][c] == 0:
+                return jsonify({
+                    "success": True,
+                    "row": r,
+                    "col": c,
+                    "value": solution[r][c]
+                })
+    
+    return jsonify({"success": False, "message": "没有空白格子需要提示"})
+
+
 def run():
     port = int(os.environ.get("PORT", 8081))
     app.run(host="0.0.0.0", port=port, debug=False)
