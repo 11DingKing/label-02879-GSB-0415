@@ -124,3 +124,15 @@ def is_solution(puzzle: List[List[int]], solution: List[List[int]]) -> bool:
             if solution[r][c] == 0:
                 return False
     return True
+
+
+def get_hint(grid: List[List[int]], solution: List[List[int]]) -> Optional[dict]:
+    """
+    获取提示：找到第一个空格子，返回其正确答案。
+    返回 {"row": int, "col": int, "value": int} 或 None。
+    """
+    for r in range(9):
+        for c in range(9):
+            if grid[r][c] == 0:
+                return {"row": r, "col": c, "value": solution[r][c]}
+    return None
